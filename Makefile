@@ -1,6 +1,6 @@
 # ============================================================================
 #  Makefile — build / upload / monitor for the Cue e-paper sketch
-#  Target board: ESP32-S3 N16R8 (16MB flash / 8MB OPI PSRAM)
+#  Target board: ELEGOO ESP32 (ESP32-WROOM-32 DevKit, CP2102 USB-UART)
 # ============================================================================
 #  Common usage:
 #     make            # compile + upload + monitor (default)
@@ -10,14 +10,14 @@
 #     make ports      # list connected boards / serial ports
 #     make help       # show all targets
 #
-#  Override the port if it is not /dev/ttyACM0:
-#     make upload PORT=/dev/ttyACM1
+#  Override the port if it is not /dev/ttyUSB0:
+#     make upload PORT=/dev/ttyUSB1
 # ============================================================================
 
-# --- Config (verified for ESP32-S3 N16R8) -----------------------------------
+# --- Config (verified for ESP32-WROOM-32) -----------------------------------
 SKETCH_DIR := $(CURDIR)
-FQBN       := esp32:esp32:esp32s3:PSRAM=opi,FlashSize=16M,USBMode=hwcdc,CDCOnBoot=cdc
-PORT       ?= /dev/ttyACM0
+FQBN       := esp32:esp32:esp32
+PORT       ?= /dev/ttyUSB0
 BAUD       ?= 115200
 CLI        := arduino-cli
 
@@ -61,7 +61,7 @@ ports:
 port-check:
 	@if [ ! -e "$(PORT)" ]; then \
 		echo "!! Port $(PORT) not found."; \
-		echo "   Plug the board's NATIVE USB port, or: make upload PORT=/dev/ttyACMx"; \
+		echo "   Plug in the board's USB port, or: make upload PORT=/dev/ttyUSBx"; \
 		echo "   If upload fails: hold BOOT, tap RESET, release BOOT, then retry."; \
 		exit 1; \
 	fi
@@ -76,4 +76,4 @@ help:
 	@echo "  make flash     Upload then monitor (default: 'make')"
 	@echo "  make ports     List connected boards / serial ports"
 	@echo ""
-	@echo "Override the port:  make upload PORT=/dev/ttyACM1"
+	@echo "Override the port:  make upload PORT=/dev/ttyUSB1"

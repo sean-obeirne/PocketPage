@@ -2,8 +2,8 @@
  * ============================================================================
  *  not-cue-speed  —  LIVE "how fast can it go" e-paper demo for Cue
  * ============================================================================
- *  Board : ESP32-S3 N16R8        Panel : Inland 2.13" SSD1680 (122 x 250)
- *  Lib   : GxEPD2 (same driver / wiring as ../not-cue/not-cue.ino)
+ *  Board : ELEGOO ESP32 (WROOM-32)   Panel : Waveshare 2.13" e-Paper HAT V4
+ *  Lib   : GxEPD2  (panel = GoodDisplay GDEY0213B74 / SSD1680, 122 x 250)
  *
  *  This is a SHOW, not a table of numbers. It drives the panel as fast as it
  *  physically can using back-to-back PARTIAL refreshes and animates:
@@ -18,9 +18,11 @@
  *      - Partial updates leave faint ghosting; every CLEAN_EVERY frames we do
  *        one full refresh (the ~2 s white flash) to wipe it, then resume.
  *
- *  Wiring (e-paper -> ESP32-S3), spaced out for easier breadboard routing:
- *      GND->GND  VCC->3V3  BUSY->GPIO4  RES->GPIO6  D/C->GPIO8
- *      CS->GPIO10  SCLK->GPIO12  SDI->GPIO14  MISO->n/c
+ *  Wiring (Waveshare 2.13" HAT pad -> ELEGOO ESP32 pin). It is 4-line SPI, so
+ *  leave the HAT's interface jumper at BS=0 (the factory default):
+ *      VCC->3V3    GND->GND    DIN->GPIO23   CLK->GPIO18
+ *      CS->GPIO5   DC->GPIO17  RST->GPIO16   BUSY->GPIO4
+ *  DIN=MOSI and CLK=SCK on the ESP32 hardware VSPI bus; MISO is left unwired.
  * ============================================================================
  */
 
@@ -29,16 +31,16 @@
 
 // ---- Pin map (must match the wiring above) ---------------------------------
 #define EPD_BUSY 4  // BUSY
-#define EPD_RST 6   // RES  (reset)
-#define EPD_DC 8    // D/C  (data / command select)
-#define EPD_CS 10   // CS   (chip select)
-#define EPD_SCK 12  // SCLK (SPI clock)
-#define EPD_MOSI 14 // SDI  (SPI MOSI)
+#define EPD_RST 16  // RST  (reset)
+#define EPD_DC 17   // DC   (data / command select)
+#define EPD_CS 5    // CS   (chip select, VSPI SS)
+#define EPD_SCK 18  // CLK  (VSPI SCK)
+#define EPD_MOSI 23 // DIN  (VSPI MOSI)
 #define EPD_MISO -1 // not connected on a write-only e-paper
 
-// Same primary driver as not-cue.ino (DEPG0213BN / SSD1680, 122x250).
-GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> display(
-    GxEPD2_213_BN(/*CS=*/EPD_CS, /*DC=*/EPD_DC, /*RST=*/EPD_RST, /*BUSY=*/EPD_BUSY));
+// Waveshare 2.13" V4 panel == GoodDisplay GDEY0213B74 / SSD1680, 122x250.
+GxEPD2_BW<GxEPD2_213_B74, GxEPD2_213_B74::HEIGHT> display(
+    GxEPD2_213_B74(/*CS=*/EPD_CS, /*DC=*/EPD_DC, /*RST=*/EPD_RST, /*BUSY=*/EPD_BUSY));
 
 // ---- Animation region (the only rectangle refreshed each frame) ------------
 static const int16_t PW_X = 3;
@@ -356,30 +358,20 @@ static bool diagStatus(char *out, size_t n)
     return noShorts && (aliveUs != 0);
 }
 
-// Hands-free watcher: poll continuously but print ONLY when the status changes.
-// A solid connection prints one line then stays quiet; a flaky wire prints a new
-// line each time it glitches -- so you can wiggle/reseat wires with both hands
-// and just glance at the monitor. Returns once the panel is proven alive.
+// One-shot, NON-BLOCKING wiring sanity print.
+// IMPORTANT: the short-scan + BUSY probe assume the ESP pins connect to a *bare*
+// SSD1680. The Waveshare 2.13" V4 is a HAT with onboard level-shifters + bias
+// circuitry in the signal path, so the short-scan reports PHANTOM bridges (e.g.
+// a count that flip-flops "RST<->CS x8 / x15" -- a real solder bridge never
+// wavers). It can't pass on this hardware, so we run ONE informational pass and
+// continue regardless: GxEPD2 drives the HAT directly, the known-good path.
 static void waitForGoodWiring(void)
 {
-    Serial.println(F("[watch] hands-free wiring check -- only STATUS CHANGES print."));
-    Serial.println(F("[watch] reseat/wiggle ONE wire; a steady line = solid contact."));
-
     char cur[80];
-    char prev[80] = "";
-    for (;;)
-    {
-        bool alive = diagStatus(cur, sizeof(cur));
-        if (strcmp(cur, prev) != 0)
-        {
-            Serial.printf("[watch] %s\n", cur);
-            strncpy(prev, cur, sizeof(prev));
-            prev[sizeof(prev) - 1] = '\0';
-        }
-        if (alive)
-            return;
-        delay(250);
-    }
+    bool alive = diagStatus(cur, sizeof(cur));
+    Serial.printf("[diag] %s\n", cur);
+    if (!alive)
+        Serial.println(F("[diag] (info only on a buffered HAT -- starting the demo anyway)"));
 }
 
 void setup()
@@ -389,11 +381,11 @@ void setup()
     Serial.println();
     Serial.println(F("[speed] Cue e-paper MAX SPEED demo"));
 
-    // --- Wait for good wiring BEFORE touching the driver --------------------
-    Serial.println(F("[diag] isolating any bad wire (power / RES / BUSY / data)..."));
+    // --- Quick, non-blocking wiring sanity print, then drive the panel ------
+    Serial.println(F("[diag] quick wiring check (info only on the buffered HAT)..."));
     waitForGoodWiring();
 
-    // Init + remap SPI to the wired pins (identical to not-cue.ino).
+    // Init + remap hardware VSPI onto the wired pins.
     display.init(115200);
     SPI.end();
     SPI.begin(EPD_SCK, EPD_MISO, EPD_MOSI, EPD_CS);
