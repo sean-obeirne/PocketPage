@@ -1,0 +1,64 @@
+PocketPage self-test
+====================
+
+If you can read this top line, the SD card mounted, the file
+opened, and the e-paper is drawing. Good.
+
+This file is numbered so you can prove the page navigation is
+correct, not just that *something* appears.
+
+--- HOW TO USE THIS TEST ---
+
+[01] Press NEXT. The page should advance and the first line
+should continue exactly where this page stopped, with no text
+skipped and none repeated.
+
+[02] Press LAST. You should land back on the previous page,
+showing this same numbered content again.
+
+[03] Press MENU. The library list should appear. Press MENU
+again on a file to reopen it.
+
+[04] This sentence is deliberately very long so that it must
+wrap across several display lines instead of being cut off at
+the right edge, which checks that the word-wrap logic is
+breaking on spaces and never slicing a word in half.
+
+[05] supercalifragilisticexpialidocious_is_one_unbroken_token
+that is wider than the screen on purpose, to confirm an overly
+long word hard-wraps at the edge instead of hanging the reader.
+
+=== MARKER A ===
+
+[06] Counting upward so you can see continuity across turns.
+[07] seven
+[08] eight
+[09] nine
+[10] ten
+[11] eleven
+[12] twelve
+[13] thirteen
+[14] fourteen
+[15] fifteen
+[16] sixteen
+[17] seventeen
+[18] eighteen
+[19] nineteen
+[20] twenty
+
+=== MARKER B ===
+
+[21] If MARKER A and MARKER B both showed up in order as you
+paged through, pagination and the page-offset table are working.
+
+[22] Keep pressing NEXT until the footer shows "(end)". That
+confirms end-of-file is detected and NEXT stops there.
+
+[23] Then hold the journey in reverse: press LAST repeatedly
+all the way back to page 1 to confirm backward navigation.
+
+=== END OF SELF-TEST ===
+
+You reached the end. If every step above behaved, the reader is
+fully functional: SD, file I/O, pagination, word-wrap, the
+footer, and all three keys. Happy hacking.
