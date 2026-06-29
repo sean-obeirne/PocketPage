@@ -170,7 +170,7 @@ void loop()
     Serial.println(F("[busytest] red on the named PANEL pad. The one that won't SWING is broken:"));
     Serial.println();
     SPI.end();
-    scanLine(EPD_SCK, "SCLK", "CLK"); // D18 - just reworked
+    scanLine(EPD_SCK, "SCLK", "CLK");  // D18 - just reworked
     scanLine(EPD_MOSI, "MOSI", "DIN"); // D23 - just reworked
     scanLine(EPD_CS, "CS", "CS");
     scanLine(EPD_DC, "DC", "DC");
