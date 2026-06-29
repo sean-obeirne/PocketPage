@@ -63,7 +63,9 @@ static void scanCard()
         return;
     }
     g_mounted = true;
-    g_type = (t == CARD_MMC) ? "MMC" : (t == CARD_SD) ? "SDSC" : (t == CARD_SDHC) ? "SDHC/XC" : "?";
+    g_type = (t == CARD_MMC) ? "MMC" : (t == CARD_SD) ? "SDSC"
+                                   : (t == CARD_SDHC) ? "SDHC/XC"
+                                                      : "?";
     g_sizeMB = SD.cardSize() / (1024.0 * 1024.0);
 
     File root = SD.open("/");
