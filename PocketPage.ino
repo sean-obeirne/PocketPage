@@ -70,6 +70,15 @@ static const int16_t FOOTER_Y = SCR_H - 10;
 // ---- Progress file (per-book resume) ---------------------------------------
 static const char *PROG_PATH = "/.ppprog";
 
+// ---- Refresh policy --------------------------------------------------------
+// Page/menu redraws use FAST PARTIAL refresh (no black flash). Partial updates
+// leave faint ghosting, so every CLEAN_EVERY redraws we do ONE full refresh to
+// wipe the panel clean. g_sinceClean counts redraws since the last full clear.
+// (beginRefresh() is defined after the Key block so the Arduino auto-prototype
+//  generator sees the Key struct before any function definition.)
+static const int CLEAN_EVERY = 8;
+static int g_sinceClean = CLEAN_EVERY; // force a full refresh on the very first draw
+
 // ---- Reading state ---------------------------------------------------------
 static const int MAX_PAGES = 4000;
 static File g_book;
@@ -125,6 +134,22 @@ static bool keyPressed(Key &k)
             return true;
     }
     return false;
+}
+
+// Pick the window for this redraw: a full refresh (with flash) when it's time to
+// clear ghosting or when forced, otherwise a flicker-free partial refresh.
+static void beginRefresh(bool forceFull)
+{
+    if (forceFull || g_sinceClean >= CLEAN_EVERY)
+    {
+        display.setFullWindow();
+        g_sinceClean = 0;
+    }
+    else
+    {
+        display.setPartialWindow(0, 0, SCR_W, SCR_H);
+    }
+    g_sinceClean++;
 }
 
 // ---- Text layout -----------------------------------------------------------
@@ -222,6 +247,7 @@ static void saveProgress()
 static void drawMessage(const char *l1, const char *l2, const char *l3)
 {
     display.setFullWindow();
+    g_sinceClean = 0; // this is a full refresh; reset the ghosting counter
     display.firstPage();
     do
     {
@@ -259,7 +285,7 @@ static void showPage()
     char footer[24];
     snprintf(footer, sizeof(footer), "p.%d%s", g_pageIndex + 1, atEnd ? "  (end)" : "");
 
-    display.setFullWindow();
+    beginRefresh(false);
     display.firstPage();
     do
     {
@@ -289,7 +315,7 @@ static void showMenu()
     if (g_menuSel >= visible)
         first = g_menuSel - visible + 1;
 
-    display.setFullWindow();
+    beginRefresh(false);
     display.firstPage();
     do
     {
@@ -400,6 +426,7 @@ static void openBook(int idx)
     }
 
     g_mode = MODE_READ;
+    g_sinceClean = CLEAN_EVERY; // whole-layout change: force a clean full refresh
     showPage();
     Serial.printf("[read] opened %s at page %d\n", g_bookPath.c_str(), g_pageIndex + 1);
 }
@@ -438,6 +465,7 @@ static void openMenu()
     loadProgress();
     g_menuSel = (g_curFile >= 0 && g_curFile < g_fileCount) ? g_curFile : 0;
     g_mode = MODE_MENU;
+    g_sinceClean = CLEAN_EVERY; // whole-layout change: force a clean full refresh
     showMenu();
 }
 
