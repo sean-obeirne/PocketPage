@@ -34,6 +34,14 @@ build:
 	@echo ">> Compiling ($(FQBN))"
 	$(CLI) compile --fqbn "$(FQBN)" "$(SKETCH_DIR)"
 
+# --- Hardware diagnostic: direct BUSY-line probe (no GxEPD2) -----------------
+.PHONY: busytest
+busytest: port-check
+	@echo ">> Building + flashing BUSY probe to $(PORT)"
+	$(CLI) compile --upload -p "$(PORT)" --fqbn "$(FQBN)" "$(SKETCH_DIR)/tools/busytest"
+	@echo ">> Monitor (Ctrl-C to exit) -- watch the VERDICT line"
+	$(CLI) monitor -p "$(PORT)" -c baudrate=$(BAUD)
+
 # --- Compile + upload -------------------------------------------------------
 .PHONY: upload
 upload: port-check

@@ -20,9 +20,10 @@
  *
  *  Wiring (Waveshare 2.13" HAT pad -> ELEGOO ESP32 pin). It is 4-line SPI, so
  *  leave the HAT's interface jumper at BS=0 (the factory default):
- *      VCC->3V3    GND->GND    DIN->GPIO23   CLK->GPIO18
+ *      VCC->3V3    GND->GND    DIN->GPIO13   CLK->GPIO18
  *      CS->GPIO5   DC->GPIO17  RST->GPIO16   BUSY->GPIO4
  *  DIN=MOSI and CLK=SCK on the ESP32 hardware VSPI bus; MISO is left unwired.
+ *  (DIN moved GPIO23 -> GPIO13: the original GPIO23 output driver was damaged.)
  * ============================================================================
  */
 
@@ -35,7 +36,7 @@
 #define EPD_DC 17   // DC   (data / command select)
 #define EPD_CS 5    // CS   (chip select, VSPI SS)
 #define EPD_SCK 18  // CLK  (VSPI SCK)
-#define EPD_MOSI 23 // DIN  (VSPI MOSI)
+#define EPD_MOSI 13 // DIN  (VSPI MOSI; remapped off dead GPIO23 -> GPIO13)
 #define EPD_MISO -1 // not connected on a write-only e-paper
 
 // Waveshare 2.13" V4 panel == GoodDisplay GDEY0213B74 / SSD1680, 122x250.
