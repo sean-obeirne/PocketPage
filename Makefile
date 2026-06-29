@@ -42,6 +42,14 @@ busytest: port-check
 	@echo ">> Monitor (Ctrl-C to exit) -- watch the VERDICT line"
 	$(CLI) monitor -p "$(PORT)" -c baudrate=$(BAUD)
 
+# --- Hardware diagnostic: microSD mount + file list (shows on panel) ---------
+.PHONY: sdtest
+sdtest: port-check
+	@echo ">> Building + flashing SD test to $(PORT)"
+	$(CLI) compile --upload -p "$(PORT)" --fqbn "$(FQBN)" "$(SKETCH_DIR)/tools/sdtest"
+	@echo ">> Monitor (Ctrl-C to exit) -- result also shown on the e-paper"
+	$(CLI) monitor -p "$(PORT)" -c baudrate=$(BAUD)
+
 # --- Compile + upload -------------------------------------------------------
 .PHONY: upload
 upload: port-check
