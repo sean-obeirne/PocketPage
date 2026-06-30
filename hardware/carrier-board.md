@@ -88,7 +88,7 @@ spikes. Put these on the carrier so they're permanent:
 | U2 | 6-pin female header | sockets the microSD module |
 | U3 | IP5306 power-bank module + pads/header | charger + 5 V boost |
 | BT1 | single-cell LiPo, **JST-PH 2-pin** | 1000–2000 mAh |
-| SW1–3 | Cherry MX switches | along the long edge (you have these) |
+| SW1–3 | **Kailh Choc v1 + hotswap sockets** | page/menu keys — see `switches-choc.md` |
 | SW4 | slide switch | battery power on/off |
 | J1 | 8-pin connector (2.54 mm or JST-XH) | e-paper, use the **spare HAT's intact cable** |
 | C1–C4 | caps per table above | |
